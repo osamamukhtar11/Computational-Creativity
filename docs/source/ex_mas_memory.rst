@@ -1,0 +1,151 @@
+Week 3 - Multi-Agent Systems, Memory, Learning
+=============================================================
+
+.. note::
+	There is now an example implementation (which is hopefully bug free) of
+	an agent using Nth order MC in the repository. The code is not fully
+	documented, so find out the interesting parts yourself.
+
+	`(agent code) <https://github.com/assamite/cc-mas-course/blob/master/week3/markov_agent.py>`_
+
+|
+
+	#. Familiarize yourself with the example of an agent with a limited memory
+	   of artifacts it has most recently seen (see :doc:`mas_memory`). The next
+	   exercises are heavily based on it.
+
+	#. **RETURN** In the example (see previous exercise), the memory model is a
+	   photographic (eidetic) one, holding the recently seen artifact instances as is.
+	   However, as you might remember from the Ventura's paper from the first week, it
+	   does not necessarily have to be so simple. Instead, it could change the
+	   representation of the artifacts as Ventura mentions in *memorization*, or
+	   even generalize the artifacts to more abstract representations as is the
+	   case with *generalization*.
+
+	   Give some examples of real implementable models that could be used as the
+	   memory of an agent (you can think of any models you have previously encountered,
+	   e.g. from machine learning or data mining). You can choose the domain of
+	   the artifacts and its restrictions as you see fit as long as you state
+	   them clearly in your answer. What pros and cons does your memory model have?
+	   Write your answer briefly (10-15 sentences).
+
+	   Additional notes:
+
+		* The important functionality of the memory model is that it should be
+		  able to help in assessing the new artifact's novelty based on the
+		  previously seen artifacts.
+
+	#. **RETURN** Use the memory model given in the example in your own code:
+
+		* Adjust your agent class (the one with MC as the generative model) to use the 
+		  :class:`ListMemory` in the same way as in the example i.e. use it to
+		  compute the novelty of an artifact and refactor :func:`evaluate` to
+		  take into account both the novelty and the value. Value function can
+		  be the same function you implemented the last week, or the
+		  (pseudo)likelihood.
+
+		* Adjust your :meth:`ToyEnvironment.vote` to add the winner's of the vote
+		  to the domain as described in the example.
+
+		* Add the memorization of both the agent's own artifacts and random
+		  domain artifacts to :func:`act`.
+
+		Additional things to look at if interested:
+
+		* Experiment with different memory capacities (between different societies
+		  or between different agents in the same society). Do you see any differences?
+
+	#. **RETURN** Towards transformational creativity
+	
+	   Background:
+	
+	   In this exercise, we will implement a simple functionality
+	   which makes the agents adjust their generative model during their lifespan.
+	   This functionality could be stated to be the first step towards the
+	   transformational creativity (if we are pompous). The functionality is
+	   implemented by changing (or adding to) the inner Markov chain representation
+	   of the agent.
+
+	   Until now, the agents have only used constant state transition
+	   probability data structures, which have been given or learned at the
+	   initialization time, to generate new pieces of text. Now, we will change
+	   the transition probabilities based on observed instances of text. To
+	   implement this, we will go a step backwards and keep count of the actual number of each
+	   state transition (i.e. ``state_transitions`` in the first week's example)
+	   in each agent. That is, each agent should either learn the state transition
+	   counts (**not** probabilities) from the given file at initialization time,
+	   or they are given this data structure. 
+
+	   Furthermore, each agent should have an access to
+	   simple function which then transforms these state transitions counts into
+	   probabilities. However, the state transition counts should be modifiable
+	   at all times (and new transition probabilities computable).
+
+	   We will update the state transition counts when the agent observes the
+	   domain artifacts in :func:`act`. In the example, agent has a random access
+	   to the previous vote winning artifacts (domain) which they currently
+	   only memorize into their memory model. To modify our generative model, we add to the
+	   agent's state transitions counts each state transition that is observed
+	   from the domain artifact. Then, we update the state transition probabilities
+	   based on the current state transition counts.
+
+	   Specification:
+
+	   Implement a method :meth:`learn(self, artifact)` in your agent
+	   class. The method takes as input :class:`Artifact` object, and updates the
+	   state transition counts with each state transition that is observed from
+	   the artifact (remember that the actual string was in ``obj`` attribute
+	   of the artifact object). Use appropriate tokenization method (depending
+	   on your MC implementation) to split the string first and then observe the
+	   state transitions from the tokenized string. The function (or some helper
+	   function) then adds these state transitions to your state transition counts.
+	   If new states and state transitions are observed, add them to the data
+	   structure as well. Then, compute the new state transition probabilities
+	   for the agent. Call this in :func:`act` for the domain artifact that was
+	   memorized (if there was any domain artifacts), before the agent invents
+	   new artifact.
+
+	#. **RETURN** After you have built the functionality from the previous exercise,
+	   run the simulation for an agent population with at least two different
+	   sources of MC models. Observe if the transformational properties of the
+	   agents affect the agents liking of the inner groups (agents with the same starting
+	   MC model) or outer groups (agents with the different starting MC model) in the
+	   long run. You may have to run the simulation quite a long time (some thousands of
+	   iterations). What do you observe? State your findings briefly. You may
+	   use plots, images or other visualization methods (in fact you are encouraged
+	   to).
+
+	   Additional notes:
+
+		* Splitting the long run into even length intervals and computing some
+		  aggregate measures from the voting behavior during each interval can
+		  be a good starting point. However, you may do the observations any way
+		  you like as long as you are able to extract some interesting bits of
+		  information of what happens in the society during the system run (if
+		  anything happens at all).
+	
+		* Try to be as elaborate as you can get in your observations. Why things
+		  happen or do not happen?
+
+	#. **RETURN** Design and implement an agent interaction model, where agents ask directly
+	   others opinions about their artifacts and may take the information they
+	   see viable into account by modifying their generative model or
+	   evaluation function (or both). The interaction model does not have to be complex,
+	   and the rules when the agents learn something from the feedback can be
+	   simple. We have free rein of your own design! Write a short description of your model.
+	   Return both the description and the code.
+
+	   Examples:
+
+		#. Ask opinion about the artifact they invented from a random agent. If agent likes (or dislikes) the
+		   artifact, update state transition counts (and probabilities) with the
+		   states of the artifact. Experiment with different thresholds for 'liking'.
+		#. Same as above but also update agent so that it is more likely to ask
+		   opinion from agents that have given it positive feedback. Negative
+		   feedback may or may not change the agents preferences.
+		#. Implement another agent class, :class:`LibrarianAgent`, that does not
+		   invent artifacts, but only memorizes artifacts from the domain. If the
+		   artifact memorized from the domain is very good (the agent should have
+		   notions of value and novelty), it spreads it to few random agents in
+		   the society. Put few of these agents into a society and remove other
+		   agents' access to the domain. What happens? Why?
