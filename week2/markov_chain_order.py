@@ -35,22 +35,8 @@ def read_alice_in_wonderland():
     raw_text = re.sub(r'\s+', ' ', alice)
     return raw_text
 
-# Sanitize text
-def sanitize_list_of_tokens(tokenized_sentences):
-    sanitized_sentences = []
-    is_word = re.compile('\w')
-    for sent in tokenized_sentences:
-        eachSentence = ' '.join(e for e in sent)
-        eachSentence = eachSentence.lower()
-        eachSentence.translate(string.punctuation)
-        sent = nltk.word_tokenize(eachSentence)
-        sanitized = [token for token in sent if is_word.search(token)] + ['.']
-        sanitized_sentences.append(sanitized)
-
-    return sanitized_sentences
-
-# Sanitize text and use a first order markov chain model
-def markov_chain(raw_text, sanitize):
+# Use any order markov chain model
+def markov_chain(raw_text, order=1):
     # Tokenize the text into sentences.
     sentences = nltk.sent_tokenize(raw_text)
 
@@ -58,18 +44,27 @@ def markov_chain(raw_text, sanitize):
     # tokenized words from that list.
     tokenized_sentences = []
     for s in sentences:
-        w = nltk.word_tokenize(s)
-        tokenized_sentences.append(w)
+        #    print(s)
+        singleWordTokens = nltk.word_tokenize(s)
+        tokenized_sentence = []
+        for i in range(0, len(singleWordTokens) - order + 1):
+            # print(i, w[i])
+            counter = 0
+            stateElements = []
+            for j in range(i, i + order):
+                # print(w[j])
+                stateElements.append(singleWordTokens[j])
+            orderSizeState = ' '.join(stateElements)
+            tokenized_sentence.append(orderSizeState)
+        tokenized_sentences.append(tokenized_sentence)
 
-    if (sanitize):
-        tokenized_sentences = sanitize_list_of_tokens(tokenized_sentences)
+    print('States from text:\n', tokenized_sentences)
 
     transitions = {}
     for eachList in tokenized_sentences:
-        # eachSentence = ' '.join(e for e in eachList)
         for i in range(len(eachList) - 1):
             pred = eachList[i]
-            succ = eachList[i + 1]
+            succ = eachList[i + 1].split()[order - 1]
             if pred not in transitions:
                 # Predecessor key is not yet in the outer dictionary, so we create
                 # a new dictionary for it.
@@ -98,7 +93,7 @@ def markov_chain(raw_text, sanitize):
 
 # Function calls
 raw_text = read_alice_in_wonderland()
-probabilities_dict=markov_chain(raw_text, True)
+probabilities_dict=markov_chain(raw_text, 2)
 for pred in probabilities_dict:
     sorted_by_values = sorted(probabilities_dict[pred].items(), key=operator.itemgetter(1), reverse=True)
     print(pred, sorted_by_values)
