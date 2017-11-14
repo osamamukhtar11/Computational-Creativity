@@ -148,10 +148,23 @@ def generate_2(state_transition_probabilities_1, state_transition_probabilities_
     print('TEXT GENERATED: ',string)
     return string
 
+def get_nouns(text):
+    tokens = nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(tokens)
+    listOfNouns=[]
+    for item in tagged:
+        if item[1][0] == 'N':
+            listOfNouns.append(item[0])
+    return listOfNouns
+
 # Function calls
 raw_text = read_alice_in_wonderland()
 state_transition_probabilities_1=markov_chain(raw_text, 1)
 state_transition_probabilities_2=markov_chain(raw_text, 2)
-start='Jason Isbell'
+start=None
 length=10
-generatedText = generate_2(state_transition_probabilities_1, state_transition_probabilities_2, length, start)
+Nouns=[]
+while((len(Nouns))==0):
+    generatedText = generate_2(state_transition_probabilities_1, state_transition_probabilities_2, length, start)
+    Nouns = get_nouns(generatedText)
+print('LIST OF NOUNS: ',Nouns)
