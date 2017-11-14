@@ -130,35 +130,40 @@ def likelihood(text,state_transitions_probabilities):
 
 ###------------------------------------------------------###
 # Download Alice's Adventures in Wonderland if it is not yet present
-alice_file = 'alice.txt'
-alice_raw = None
+def read_alice_in_wonderland():
+    # Download Alice's Adventures in Wonderland if it is not yet present
+    alice_file = 'alice.txt'
+    alice_raw = None
 
-if not os.path.isfile(alice_file):
-    from urllib import request
-    url = 'http://www.gutenberg.org/cache/epub/19033/pg19033.txt'
-    response = request.urlopen(url)
-    alice_raw = response.read().decode('utf8')
-    with open(alice_file, 'w', encoding='utf8') as f:
-        f.write(alice_raw)
-else:
-    with open(alice_file, 'r', encoding='utf8') as f:
-        alice_raw = f.read()
+    if not os.path.isfile(alice_file):
+        from urllib import request
+        url = 'http://www.gutenberg.org/cache/epub/19033/pg19033.txt'
+        response = request.urlopen(url)
+        alice_raw = response.read().decode('utf8')
+        with open(alice_file, 'w', encoding='utf8') as f:
+            f.write(alice_raw)
+    else:
+        with open(alice_file, 'r', encoding='utf8') as f:
+            alice_raw = f.read()
 
-# Remove the start and end bloat from Project Gutenberg (this is not exact, but
-# easy).
-pattern = r'\*\*\* START OF THIS PROJECT GUTENBERG EBOOK .+ \*\*\*'
-end = "End of the Project Gutenberg"
-start_match = re.search(pattern, alice_raw)
-if start_match:
-    start_index = start_match.span()[1] + 1
-else:
-    start_index = 0
-end_index = alice_raw.rfind(end)
-alice = alice_raw[start_index:end_index]
+    # Remove the start and end bloat from Project Gutenberg (this is not exact, but
+    # easy).
+    pattern = r'\*\*\* START OF THIS PROJECT GUTENBERG EBOOK .+ \*\*\*'
+    end = "End of the Project Gutenberg"
+    start_match = re.search(pattern, alice_raw)
+    if start_match:
+        start_index = start_match.span()[1] + 1
+    else:
+        start_index = 0
+    end_index = alice_raw.rfind(end)
+    alice = alice_raw[start_index:end_index]
 
-# And replace more than one subsequent whitespace chars with one space
-raw_text = re.sub(r'\s+', ' ', alice)
+    # And replace more than one subsequent whitespace chars with one space
+    raw_text = re.sub(r'\s+', ' ', alice)
+    return raw_text
 
+
+raw_text = read_alice_in_wonderland()
 probabilities_dict=markov_chain(raw_text, True)
 
 created_text = generate(probabilities_dict, 10, None)

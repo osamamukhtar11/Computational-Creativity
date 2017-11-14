@@ -10,36 +10,41 @@ import re
 import nltk
 import operator
 
-# Download Alice's Adventures in Wonderland if it is not yet present
-alice_file = 'alice.txt'
-alice_raw = None
 
-if not os.path.isfile(alice_file):
-    from urllib import request
-    url = 'http://www.gutenberg.org/cache/epub/19033/pg19033.txt'
-    response = request.urlopen(url)
-    alice_raw = response.read().decode('utf8')
-    with open(alice_file, 'w', encoding='utf8') as f:
-        f.write(alice_raw)
-else:
-    with open(alice_file, 'r', encoding='utf8') as f:
-        alice_raw = f.read()
+def read_alice_in_wonderland():
+    # Download Alice's Adventures in Wonderland if it is not yet present
+    alice_file = 'alice.txt'
+    alice_raw = None
 
-# Remove the start and end bloat from Project Gutenberg (this is not exact, but
-# easy).
-pattern = r'\*\*\* START OF THIS PROJECT GUTENBERG EBOOK .+ \*\*\*'
-end = "End of the Project Gutenberg"
-start_match = re.search(pattern, alice_raw)
-if start_match:
-    start_index = start_match.span()[1] + 1
-else:
-    start_index = 0
-end_index = alice_raw.rfind(end)
-alice = alice_raw[start_index:end_index]
-#alice = alice.lower()
+    if not os.path.isfile(alice_file):
+        from urllib import request
+        url = 'http://www.gutenberg.org/cache/epub/19033/pg19033.txt'
+        response = request.urlopen(url)
+        alice_raw = response.read().decode('utf8')
+        with open(alice_file, 'w', encoding='utf8') as f:
+            f.write(alice_raw)
+    else:
+        with open(alice_file, 'r', encoding='utf8') as f:
+            alice_raw = f.read()
 
-# And replace more than one subsequent whitespace chars with one space
-alice = re.sub(r'\s+', ' ', alice)
+    # Remove the start and end bloat from Project Gutenberg (this is not exact, but
+    # easy).
+    pattern = r'\*\*\* START OF THIS PROJECT GUTENBERG EBOOK .+ \*\*\*'
+    end = "End of the Project Gutenberg"
+    start_match = re.search(pattern, alice_raw)
+    if start_match:
+        start_index = start_match.span()[1] + 1
+    else:
+        start_index = 0
+    end_index = alice_raw.rfind(end)
+    alice = alice_raw[start_index:end_index]
+
+    # And replace more than one subsequent whitespace chars with one space
+    raw_text = re.sub(r'\s+', ' ', alice)
+    return raw_text
+
+
+alice = read_alice_in_wonderland()
 
 # Tokenize the text into sentences.
 sentences = nltk.sent_tokenize(alice)
